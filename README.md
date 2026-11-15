@@ -56,7 +56,7 @@ Schema changes go through migration files only. Edit [src/lib/db/schema.ts](src/
 
 | Variable | Used for |
 |----------|----------|
-| `DATABASE_URL` | Postgres connection string |
+| `DATABASE_URL` | Postgres connection string. If unset, `RAG_MNJ_DATABASE_URL` (created by the Neon Vercel integration) is used. |
 | `AUTH_SECRET` | Signs login tokens. At least 32 characters. |
 | `BLOB_READ_WRITE_TOKEN` | Private Vercel Blob store for uploads |
 | `HF_TOKEN` | Hugging Face token for embeddings. Also used for chat unless `NVIDIA_API_KEY` is set. |
