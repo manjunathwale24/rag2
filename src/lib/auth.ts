@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 
 export const SESSION_COOKIE = "rag_session";
-export const SESSION_TTL = "7d";
+export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export type AuthUser = { id: string; email: string };
 
@@ -27,7 +27,7 @@ export function issueToken(user: AuthUser): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
     .setIssuedAt()
-    .setExpirationTime(SESSION_TTL)
+    .setExpirationTime(Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS)
     .sign(signingKey());
 }
 
