@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "./db";
@@ -26,10 +26,6 @@ export function isAllowedUploadPath(kbId: string, pathname: string): boolean {
   return SUPPORTED_EXTENSIONS.includes(path.extname(parts[1]).toLowerCase());
 }
 
-/** Builds a new upload path. Slashes are replaced so a filename can never add folders. */
-export function buildUploadPathname(kbId: string, filename: string, uuid: string = randomUUID()): string {
-  return `kbs/${kbId}/${uuid}/${filename.replace(/[\\/]/g, "_")}`;
-}
 
 export const ALLOWED_CONTENT_TYPES = [...new Set(Object.values(MIME_TYPES))];
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;

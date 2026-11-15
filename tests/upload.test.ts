@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { closeDb, getDb, resetTestDatabase } from "./helpers/db";
 import { memoryBlobStore } from "./helpers/memory-store";
 import { documents, knowledgeBases, users } from "../src/lib/db/schema";
-import { buildUploadPathname, isAllowedUploadPath, registerDocument } from "../src/lib/upload";
+import { buildUploadPathname } from "../src/lib/upload-path";
+import { isAllowedUploadPath, registerDocument } from "../src/lib/upload";
 
 const KB_ID = "11111111-1111-4111-8111-111111111111";
 

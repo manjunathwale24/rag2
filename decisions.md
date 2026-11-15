@@ -52,11 +52,10 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | T1 | npm registry: the global config points to an expired AWS CodeArtifact registry. A project-level `.npmrc` points to the public npm registry for this repo only. | Decided (user approved) |
 | T2 | Tests use `node --import tsx --test`. `vitest` was dropped because of a peer conflict with `@types/node`. | Decided |
 | T3 | Development follows TDD: write failing tests, then implement. | Decided |
-| T4 | `next.config.ts` still has `cacheComponents` and `partialPrefetching` from the scaffold. Remove them unless they are needed. | **Open** |
+| T4 | `next.config.ts` had `cacheComponents` and `partialPrefetching` from the scaffold. Removed. Every page is per-user and reads at request time, so prerendering with these flags only broke the build (`useParams` needs runtime data). | **Decided** |
 | T5 | Git identity for commits: the `Copilot` identity is passed per command, so global config is unchanged. | Decided |
 
 ## Open questions
 
 1. **A5:** The Hugging Face embedding endpoint URL is still unverified. Paste the exact URL, or test later with a token.
 2. **A3:** Does a private Vercel Blob store exist? Private access needs one.
-3. **T4:** Remove `cacheComponents` and `partialPrefetching` from `next.config.ts`? (Proposed: yes.)
