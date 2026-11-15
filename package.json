@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "node --import tsx --test --test-concurrency=1 tests/*.test.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "node --env-file-if-exists=.env.local node_modules/.bin/drizzle-kit migrate",
     "user:create": "node --env-file-if-exists=.env.local --import tsx scripts/create-user.ts",
     "test:e2e": "playwright test"
   },
