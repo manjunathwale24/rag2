@@ -1,33 +1,42 @@
 import { EMBEDDING_DIMENSIONS } from "./db/schema";
 
 const BATCH_SIZE = 32;
-const DEFAULT_URL =
-  "https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5/pipeline/feature-extraction";
+const MODEL = "nvidia/llama-3.2-nv-embedqa-1b-v2";
+const DEFAULT_URL = "https://integrate.api.nvidia.com/v1/embeddings";
 
-export async function embedTexts(texts: string[]): Promise<number[][]> {
+// "passage" when indexing documents, "query" when embedding a question. NVIDIA's model needs this to match them well.
+export type InputType = "passage" | "query";
+
+type EmbeddingResponse = { data?: { index: number; embedding: number[] }[] };
+
+export async function embedTexts(texts: string[], inputType: InputType = "passage"): Promise<number[][]> {
   const vectors: number[][] = [];
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-    vectors.push(...(await embedBatch(texts.slice(i, i + BATCH_SIZE))));
+    vectors.push(...(await embedBatch(texts.slice(i, i + BATCH_SIZE), inputType)));
   }
   return vectors;
 }
 
-async function embedBatch(inputs: string[]): Promise<number[][]> {
-  const url = process.env.HF_EMBEDDING_URL ?? DEFAULT_URL;
-  const token = process.env.HF_TOKEN;
-  if (!token) throw new Error("HF_TOKEN is not set");
+async function embedBatch(inputs: string[], inputType: InputType): Promise<number[][]> {
+  const url = process.env.NVIDIA_EMBEDDING_URL ?? DEFAULT_URL;
+  const key = process.env.NVIDIA_API_KEY;
+  if (!key) throw new Error("NVIDIA_API_KEY is not set");
 
   for (let attempt = 1; ; attempt++) {
     const response = await fetch(url, {
       method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ inputs, normalize: true }),
+      headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model: MODEL,
+        input: inputs,
+        input_type: inputType,
+        encoding_format: "float",
+        truncate: "END",
+      }),
     });
 
     if (response.ok) {
-      const vectors = (await response.json()) as unknown;
-      assertVectors(vectors, inputs.length);
-      return vectors;
+      return toVectors((await response.json()) as EmbeddingResponse, inputs.length);
     }
 
     const retryable = response.status === 429 || response.status >= 500;
@@ -38,13 +47,24 @@ async function embedBatch(inputs: string[]): Promise<number[][]> {
   }
 }
 
-function assertVectors(value: unknown, expectedCount: number): asserts value is number[][] {
-  if (!Array.isArray(value) || value.length !== expectedCount) {
+// The model returns 2048 numbers per text. Keeping the first 384 and rescaling to unit length
+// matches the stored size without a database migration.
+function toVectors(response: EmbeddingResponse, expectedCount: number): number[][] {
+  const rows = response.data;
+  if (!Array.isArray(rows) || rows.length !== expectedCount) {
     throw new Error(`Embedding response has the wrong number of vectors`);
   }
-  for (const vector of value) {
-    if (!Array.isArray(vector) || vector.length !== EMBEDDING_DIMENSIONS) {
-      throw new Error(`Embedding has the wrong dimension, expected ${EMBEDDING_DIMENSIONS}`);
-    }
-  }
+  return [...rows]
+    .sort((a, b) => a.index - b.index)
+    .map((row) => {
+      if (!Array.isArray(row.embedding) || row.embedding.length < EMBEDDING_DIMENSIONS) {
+        throw new Error(`Embedding has the wrong dimension, expected ${EMBEDDING_DIMENSIONS}`);
+      }
+      return normalize(row.embedding.slice(0, EMBEDDING_DIMENSIONS));
+    });
+}
+
+function normalize(vector: number[]): number[] {
+  const length = Math.hypot(...vector);
+  return vector.map((value) => value / length);
 }

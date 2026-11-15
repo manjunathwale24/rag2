@@ -78,6 +78,6 @@ export async function searchParents(kbId: string, queryVector: number[], topK: n
 }
 
 export async function retrieve(kbId: string, query: string, topK: number): Promise<RetrievedParent[]> {
-  const [queryVector] = await embedTexts([query]);
+  const [queryVector] = await embedTexts([query], "query");
   return searchParents(kbId, queryVector, topK);
 }
