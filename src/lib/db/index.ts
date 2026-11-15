@@ -4,19 +4,28 @@ import * as schema from "./schema";
 
 export type Db = PostgresJsDatabase<typeof schema>;
 
-let client: Db | undefined;
+let db: Db | undefined;
+let sql: postgres.Sql | undefined;
 
 /**
  * Lazily created so that `next build` does not require DATABASE_URL.
  * `prepare: false` keeps the client compatible with pooled Neon connection strings.
  */
 export function getDb(): Db {
-  if (!client) {
+  if (!db) {
     const url = process.env.DATABASE_URL;
     if (!url) throw new Error("DATABASE_URL is not set");
-    client = drizzle(postgres(url, { prepare: false, max: 1 }), { schema });
+    sql = postgres(url, { prepare: false, max: 1 });
+    db = drizzle(sql, { schema });
   }
-  return client;
+  return db;
+}
+
+export async function closeDb(): Promise<void> {
+  if (!sql) return;
+  await sql.end();
+  sql = undefined;
+  db = undefined;
 }
 
 export { schema };
