@@ -11,7 +11,7 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | P3 | Users upload files up to **25 MB** through a web UI and ask questions about them. | Decided |
 | P4 | Data must not be lost across deployments. Schema changes go through drizzle migration files only. The local Postgres uses a named Docker volume. | Decided |
 | P5 | APIs: login, create knowledge base (KB), upload document, sync KB, retrieve. | Decided |
-| P6 | Answer generation uses a Hugging Face chat model that writes the answer from retrieved passages. | Decided |
+| P6 | Answer generation uses NVIDIA's chat model (`meta/llama-3.2-90b-vision-instruct`) to write the answer from retrieved passages. | Decided |
 
 ## Architecture
 
@@ -20,8 +20,8 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | A1 | Framework: Next.js (App Router) with TypeScript, deployed on Vercel. | Decided |
 | A2 | Database: Postgres with pgvector on Neon. Local dev uses `pgvector/pgvector:pg17` on port 5433. | Decided |
 | A3 | Raw file storage: Vercel Blob (private access). Object keys are `kbs/{kbId}/...`. | Decided |
-| A4 | Embeddings: Hugging Face hosted `BAAI/bge-small-en-v1.5`, 384 dimensions. Endpoint is set by the `HF_EMBEDDING_URL` env var. | Decided |
-| A5 | Endpoint URLs: the defaults in code are the Hugging Face router URLs for `BAAI/bge-small-en-v1.5` feature extraction and `Qwen/Qwen2.5-7B-Instruct` chat. Both routes exist (they return 401 without a token). A real call with a token is still needed to confirm the model and the response shape. | **Open (partly verified)** |
+| A4 | Embeddings: superseded by T10 (NVIDIA). The original choice was Hugging Face `BAAI/bge-small-en-v1.5` at 384 dimensions. | Superseded (T10) |
+| A5 | Endpoint URLs: superseded. Hugging Face URLs were removed. The NVIDIA URLs are in T8 and T10. | Superseded (T8, T10) |
 | A6 | OCR: `tesseract.js` runs on standalone images only. Images embedded in PDFs and DOCX files are not OCR'd in v1. | Decided |
 | A7 | Hierarchical chunking. Parents follow heading sections and never cross a heading. Children are overlapping windows inside a parent. Only children are embedded. Retrieval returns the parent text. | Decided |
 | A8 | Token count is approximated as characters / 4. | Decided |
@@ -57,12 +57,13 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | T3 | Development follows TDD: write failing tests, then implement. | Decided |
 | T4 | `next.config.ts` had `cacheComponents` and `partialPrefetching` from the scaffold. Removed. Every page is per-user and reads at request time, so prerendering with these flags only broke the build (`useParams` needs runtime data). | **Decided** |
 | T5 | Git identity for commits: the `Copilot` identity is passed per command, so global config is unchanged. | Decided |
-| T6 | E2E tests use local stubs for Vercel Blob (port 4010) and Hugging Face (port 4011), in `tests/e2e/stubs/`. The user has no real credentials yet. The stubs prove the app's code paths, not the real services. | Decided (user confirmed) |
-| T8 | Chat provider: if `NVIDIA_API_KEY` is set, answers use NVIDIA's OpenAI-compatible endpoint (`meta/llama-3.2-90b-vision-instruct` by default, override with `NVIDIA_CHAT_MODEL`). Otherwise the app uses Hugging Face chat. Embeddings stay on Hugging Face. The user chose NVIDIA for chat. The key was pasted in chat before this change, so it was rotated first. | Decided (user chose this) |
+| T6 | E2E tests use local stubs for Vercel Blob (port 4010) and NVIDIA (port 4011), in `tests/e2e/stubs/`. The user has no real credentials yet. The stubs prove the app's code paths, not the real services. | Decided (user confirmed) |
+| T8 | Chat provider: NVIDIA only. Answers use NVIDIA's OpenAI-compatible endpoint (`meta/llama-3.2-90b-vision-instruct` by default, override with `NVIDIA_CHAT_MODEL`). Requires `NVIDIA_API_KEY`. The user asked to drop Hugging Face entirely, so there is no HF fallback. The key was pasted in chat before this change, so it was rotated first. | Decided (user chose this) |
 | T9 | Database URL: the app reads `DATABASE_URL`, and falls back to `RAG_MNJ_DATABASE_URL` (created by the Neon Vercel integration) when it is unset. This avoids copying a secret that Vercel hides. The user approved deleting the broken placeholder `DATABASE_URL`. | Decided (user chose this) |
+| T10 | Embeddings: NVIDIA `nvidia/llama-3.2-nv-embedqa-1b-v2` at `https://integrate.api.nvidia.com/v1/embeddings`, using `NVIDIA_API_KEY`. Requests send `input_type` (`passage` when indexing, `query` when answering a question) and `truncate: END`. The model returns 2048 numbers. The app keeps the first 384 and rescales to unit length, so the stored column stays at 384 with no migration. NVIDIA's docs say smaller sizes lose some quality. Unverified against the live API until the first real call. | Decided (user chose NVIDIA only) |
  `npm run db:migrate` before `next build` (script `vercel-build`, set in `vercel.json`). A failing migration stops the deploy, so new code never runs against an unmigrated database. Migrations are reviewed in git before merge. | Decided (user chose this) |
 
 ## Open questions
 
-1. **A5:** The Hugging Face embedding endpoint URL is still unverified. Paste the exact URL, or test later with a token.
+1. **Embeddings:** the live NVIDIA embedding call (the 2048 to 384 truncation) is unverified. The first real upload and sync will confirm it.
 2. **A3:** Does a private Vercel Blob store exist? Private access needs one.

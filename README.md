@@ -15,7 +15,7 @@ Chunking is *hierarchical*: each section (a "parent") is split into smaller over
 - Next.js 16 (App Router) and TypeScript, deployed on Vercel
 - Postgres with pgvector: Docker locally, Neon in production
 - Vercel Blob (private) for the uploaded files
-- Hugging Face for embeddings and the chat model
+- NVIDIA for embeddings and the chat model
 - Email and password login with a signed JWT cookie
 - Tests: `node:test` for unit tests, Playwright for end-to-end (E2E) tests
 
@@ -36,7 +36,7 @@ You need Node.js 20.9 or newer and Docker.
 
 2. **Install dependencies:** `npm install`
 
-3. **Create `.env.local`** by copying [.env.example](.env.example). Set `AUTH_SECRET` to at least 32 random characters, for example `openssl rand -base64 48`. The Blob and Hugging Face values are only needed for real uploads and answers, not for the E2E tests.
+3. **Create `.env.local`** by copying [.env.example](.env.example). Set `AUTH_SECRET` to at least 32 random characters, for example `openssl rand -base64 48`. The Blob and NVIDIA values are only needed for real uploads and answers, not for the E2E tests.
 
 4. **Apply the database migrations:** `npm run db:migrate`
 
@@ -59,9 +59,8 @@ Schema changes go through migration files only. Edit [src/lib/db/schema.ts](src/
 | `DATABASE_URL` | Postgres connection string. If unset, `RAG_MNJ_DATABASE_URL` (created by the Neon Vercel integration) is used. |
 | `AUTH_SECRET` | Signs login tokens. At least 32 characters. |
 | `BLOB_READ_WRITE_TOKEN` | Private Vercel Blob store for uploads |
-| `HF_TOKEN` | Hugging Face token for embeddings. Also used for chat unless `NVIDIA_API_KEY` is set. |
-| `NVIDIA_API_KEY` | Optional. NVIDIA key for chat (decision T8). When set, answers use NVIDIA instead of Hugging Face. |
-| `HF_EMBEDDING_URL`, `HF_CHAT_URL`, `HF_CHAT_MODEL`, `NVIDIA_CHAT_URL`, `NVIDIA_CHAT_MODEL` | Optional overrides. The E2E tests point the HF URLs at local stubs. |
+| `NVIDIA_API_KEY` | NVIDIA key for embeddings and chat (decisions A4, T8, T10). Create one at build.nvidia.com. Required for uploads, sync, and answers. |
+| `NVIDIA_EMBEDDING_URL`, `NVIDIA_CHAT_URL`, `NVIDIA_CHAT_MODEL` | Optional overrides. The E2E tests point the NVIDIA URLs at local stubs. |
 
 ## API
 
@@ -84,7 +83,7 @@ A knowledge base you do not own returns 404.
 ## Tests
 
 - Unit tests: `npm test`
-- E2E tests: `npm run test:e2e`. Playwright starts local stubs for Vercel Blob (port 4010) and Hugging Face (port 4011), builds the app, and runs it on port 3100. It uses the `rag2_test` database and resets it on every run. Install the browser once with `npx playwright install chromium`.
+- E2E tests: `npm run test:e2e`. Playwright starts local stubs for Vercel Blob (port 4010) and NVIDIA (port 4011), builds the app, and runs it on port 3100. It uses the `rag2_test` database and resets it on every run. Install the browser once with `npx playwright install chromium`.
 - Types and lint: `npx tsc --noEmit` and `npm run lint`
 
 ## Deploying
