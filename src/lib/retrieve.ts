@@ -46,8 +46,8 @@ type HitRow = {
   distance: number | string;
 };
 
-export async function retrieve(kbId: string, query: string, topK: number): Promise<RetrievedParent[]> {
-  const [queryVector] = await embedTexts([query]);
+/** Vector search over child chunks, returning each matching parent once. */
+export async function searchParents(kbId: string, queryVector: number[], topK: number): Promise<RetrievedParent[]> {
   const vectorLiteral = `[${queryVector.join(",")}]`;
   // Over-fetch child candidates so that deduplicating by parent still yields topK results.
   const candidateLimit = Math.min(topK * 5, 100);
@@ -75,4 +75,9 @@ export async function retrieve(kbId: string, query: string, topK: number): Promi
     })),
     topK,
   );
+}
+
+export async function retrieve(kbId: string, query: string, topK: number): Promise<RetrievedParent[]> {
+  const [queryVector] = await embedTexts([query]);
+  return searchParents(kbId, queryVector, topK);
 }
