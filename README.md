@@ -16,7 +16,7 @@ Chunking is *hierarchical*: each section (a "parent") is split into smaller over
 - Postgres with pgvector: Docker locally, Neon in production
 - Vercel Blob (private) for the uploaded files
 - NVIDIA for embeddings and the chat model
-- Email and password login with a signed JWT cookie
+- Email and password login with a signed JWT cookie, protected by a Cloudflare Turnstile CAPTCHA
 - Tests: `node:test` for unit tests, Playwright for end-to-end (E2E) tests
 
 The design decisions are recorded in [decisions.md](decisions.md).
@@ -58,6 +58,8 @@ Schema changes go through migration files only. Edit [src/lib/db/schema.ts](src/
 |----------|----------|
 | `DATABASE_URL` | Postgres connection string. If unset, `RAG_MNJ_DATABASE_URL` (created by the Neon Vercel integration) is used. |
 | `AUTH_SECRET` | Signs login tokens. At least 32 characters. |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret. Required for login and sign-up. Use Cloudflare's test secret locally. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile site key shown in the forms. Build-time value, so set it before building. |
 | `BLOB_READ_WRITE_TOKEN` | Private Vercel Blob store for uploads |
 | `NVIDIA_API_KEY` | NVIDIA key for embeddings and chat (decisions A4, T8, T10). Create one at build.nvidia.com. Required for uploads, sync, and answers. |
 | `NVIDIA_EMBEDDING_URL`, `NVIDIA_CHAT_URL`, `NVIDIA_CHAT_MODEL` | Optional overrides. The E2E tests point the NVIDIA URLs at local stubs. |
@@ -68,8 +70,8 @@ All routes except `POST /api/login` need a signed-in user. Send the cookie from 
 
 | Method and path | Body | Purpose |
 |-----------------|------|---------|
-| `POST /api/login` | `{ "email", "password" }` | Sign in. Sets the cookie and returns the token. |
-| `POST /api/signup` | `{ "email", "password" }` | Create an account and sign in. Password must be at least 8 characters. Returns 409 if the email is taken. |
+| `POST /api/login` | `{ "email", "password", "captchaToken" }` | Sign in. Sets the cookie and returns the token. Requires a valid Turnstile token. |
+| `POST /api/signup` | `{ "email", "password", "captchaToken" }` | Create an account and sign in. Password must be at least 8 characters. Requires a valid Turnstile token. Returns 409 if the email is taken. |
 | `POST /api/logout` | none | Clears the cookie. |
 | `GET /api/kbs` | none | List your knowledge bases. |
 | `POST /api/kbs` | `{ "name" }` | Create a knowledge base. |
