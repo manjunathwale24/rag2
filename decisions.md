@@ -44,6 +44,9 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | I4 | A document with an error gets status `failed` with the error message. It is not retried silently. | Decided |
 | I5 | Upload status: a document is `pending` if its sha256 changed or it is not `indexed`. Otherwise it is left alone. | Decided |
 | I6 | Vercel Hobby plan, so the route time limit is 60 seconds. Large PDFs need several sync calls. The resumable design in I2 handles this. | Decided |
+| I7 | Uploads of 5 MB or less use one Blob PUT. Larger files use the multipart protocol. The threshold is `MULTIPART_THRESHOLD_BYTES` in `src/lib/upload-path.ts`. | Decided |
+| I8 | Blob completion callbacks are not used. The browser registers each document through the API after upload, which works without a public callback URL in local development. | Decided |
+| I9 | Chunk sizes: parents about 1000 tokens, children about 250 tokens, 50-token overlap. These are starting values, to be tuned later. | Decided |
 
 ## Tooling
 
@@ -54,6 +57,7 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | T3 | Development follows TDD: write failing tests, then implement. | Decided |
 | T4 | `next.config.ts` had `cacheComponents` and `partialPrefetching` from the scaffold. Removed. Every page is per-user and reads at request time, so prerendering with these flags only broke the build (`useParams` needs runtime data). | **Decided** |
 | T5 | Git identity for commits: the `Copilot` identity is passed per command, so global config is unchanged. | Decided |
+| T6 | E2E tests use local stubs for Vercel Blob (port 4010) and Hugging Face (port 4011), in `tests/e2e/stubs/`. The user has no real credentials yet. The stubs prove the app's code paths, not the real services. | Decided (user confirmed) |
 
 ## Open questions
 
