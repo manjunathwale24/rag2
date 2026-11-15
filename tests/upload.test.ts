@@ -4,9 +4,23 @@ import assert from "node:assert/strict";
 import { closeDb, getDb, resetTestDatabase } from "./helpers/db";
 import { memoryBlobStore } from "./helpers/memory-store";
 import { documents, knowledgeBases, users } from "../src/lib/db/schema";
-import { isAllowedUploadPath, registerDocument } from "../src/lib/upload";
+import { buildUploadPathname, isAllowedUploadPath, registerDocument } from "../src/lib/upload";
 
 const KB_ID = "11111111-1111-4111-8111-111111111111";
+
+describe("buildUploadPathname", () => {
+  test("builds a path the server will accept for the knowledge base", () => {
+    const pathname = buildUploadPathname(KB_ID, "guide.pdf", "33333333-3333-4333-8333-333333333333");
+    assert.equal(pathname, `kbs/${KB_ID}/33333333-3333-4333-8333-333333333333/guide.pdf`);
+    assert.equal(isAllowedUploadPath(KB_ID, pathname), true);
+  });
+
+  test("replaces slashes in the filename so it cannot create extra folders", () => {
+    const pathname = buildUploadPathname(KB_ID, "../secret/notes.md", randomUUID());
+    assert.equal(isAllowedUploadPath(KB_ID, pathname), true);
+    assert.equal(pathname.split("/").length, 4);
+  });
+});
 
 describe("isAllowedUploadPath", () => {
   test("accepts a supported file inside the knowledge base's own folder", () => {
