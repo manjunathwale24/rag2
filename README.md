@@ -40,7 +40,7 @@ You need Node.js 20.9 or newer and Docker.
 
 4. **Apply the database migrations:** `npm run db:migrate`
 
-5. **Create a user.** There is no sign-up page, so accounts are created from the command line:
+5. **Create a user.** Open `/signup` to make an account in the browser, or create one from the command line:
 
    ```bash
    npm run user:create -- you@example.com "a long password"
@@ -69,6 +69,7 @@ All routes except `POST /api/login` need a signed-in user. Send the cookie from 
 | Method and path | Body | Purpose |
 |-----------------|------|---------|
 | `POST /api/login` | `{ "email", "password" }` | Sign in. Sets the cookie and returns the token. |
+| `POST /api/signup` | `{ "email", "password" }` | Create an account and sign in. Password must be at least 8 characters. Returns 409 if the email is taken. |
 | `POST /api/logout` | none | Clears the cookie. |
 | `GET /api/kbs` | none | List your knowledge bases. |
 | `POST /api/kbs` | `{ "name" }` | Create a knowledge base. |

@@ -1,7 +1,7 @@
 import { createUser } from "../src/lib/users";
 
 // Usage: npm run user:create -- you@example.com "a long password"
-// There is no sign-up page, so accounts are created from the command line.
+// Creates an account from the command line. The /signup page does the same thing in the browser.
 async function main(): Promise<void> {
   const [email, password] = process.argv.slice(2);
   if (!email || !password || password.length < 8) {
