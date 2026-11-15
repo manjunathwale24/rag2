@@ -1,16 +1,25 @@
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, issueToken } from "../../../src/lib/auth";
+import { verifyCaptcha } from "../../../src/lib/captcha";
 import { createUser, AccountExistsError } from "../../../src/lib/users";
 
 const MIN_PASSWORD_LENGTH = 8;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CAPTCHA_FAILED = { error: "CAPTCHA check failed. Please try again." };
 
 export async function POST(request: Request): Promise<Response> {
-  const body = (await request.json().catch(() => null)) as { email?: unknown; password?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as {
+    email?: unknown;
+    password?: unknown;
+    captchaToken?: unknown;
+  } | null;
   if (typeof body?.email !== "string" || !EMAIL_PATTERN.test(body.email.trim())) {
     return Response.json({ error: "A valid email is required" }, { status: 400 });
   }
   if (typeof body.password !== "string" || body.password.length < MIN_PASSWORD_LENGTH) {
     return Response.json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` }, { status: 400 });
+  }
+  if (!(await verifyCaptcha(body.captchaToken))) {
+    return Response.json(CAPTCHA_FAILED, { status: 400 });
   }
 
   let user: { id: string; email: string };

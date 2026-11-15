@@ -1,16 +1,25 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, hashPassword, issueToken, verifyPassword } from "../../../src/lib/auth";
+import { verifyCaptcha } from "../../../src/lib/captcha";
 import { getDb } from "../../../src/lib/db";
 import { users } from "../../../src/lib/db/schema";
 
 const INVALID = { error: "Invalid email or password" };
+const CAPTCHA_FAILED = { error: "CAPTCHA check failed. Please try again." };
 const DUMMY_HASH = hashPassword(randomUUID());
 
 export async function POST(request: Request): Promise<Response> {
-  const body = (await request.json().catch(() => null)) as { email?: unknown; password?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as {
+    email?: unknown;
+    password?: unknown;
+    captchaToken?: unknown;
+  } | null;
   if (typeof body?.email !== "string" || typeof body?.password !== "string") {
     return Response.json({ error: "email and password are required" }, { status: 400 });
+  }
+  if (!(await verifyCaptcha(body.captchaToken))) {
+    return Response.json(CAPTCHA_FAILED, { status: 400 });
   }
 
   const [user] = await getDb()

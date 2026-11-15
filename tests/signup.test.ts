@@ -4,21 +4,23 @@ import assert from "node:assert/strict";
 import { closeDb, getDb, resetTestDatabase } from "./helpers/db";
 import { users } from "../src/lib/db/schema";
 import { POST } from "../app/api/signup/route";
+import { CAPTCHA_TOKEN, mockTurnstile } from "./helpers/captcha";
 
 process.env.AUTH_SECRET = "test-secret-that-is-at-least-32-characters-long";
 
 const PASSWORD = "correct horse battery";
 
-function signupRequest(body: unknown): Request {
+function signupRequest(body: Record<string, unknown>): Request {
   return new Request("http://localhost/api/signup", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ captchaToken: CAPTCHA_TOKEN, ...body }),
   });
 }
 
 describe("POST /api/signup", () => {
   beforeEach(async () => {
+    mockTurnstile(true);
     await resetTestDatabase();
   });
 
@@ -52,6 +54,17 @@ describe("POST /api/signup", () => {
 
     assert.equal(response.status, 400);
     assert.deepEqual(await response.json(), { error: "Password must be at least 8 characters" });
+    assert.equal((await getDb().select().from(users)).length, 0);
+  });
+
+  test("a failed CAPTCHA creates no account and sets no cookie", async () => {
+    mockTurnstile(false);
+
+    const response = await POST(signupRequest({ email: "ana@example.test", password: PASSWORD }));
+
+    assert.equal(response.status, 400);
+    assert.equal(response.headers.get("set-cookie"), null);
+    assert.deepEqual(await response.json(), { error: "CAPTCHA check failed. Please try again." });
     assert.equal((await getDb().select().from(users)).length, 0);
   });
 

@@ -5,21 +5,23 @@ import { closeDb, getDb, resetTestDatabase } from "./helpers/db";
 import { users } from "../src/lib/db/schema";
 import { hashPassword } from "../src/lib/auth";
 import { POST } from "../app/api/login/route";
+import { CAPTCHA_TOKEN, mockTurnstile } from "./helpers/captcha";
 
 process.env.AUTH_SECRET = "test-secret-that-is-at-least-32-characters-long";
 
 const PASSWORD = "correct horse battery";
 
-function loginRequest(body: unknown): Request {
+function loginRequest(body: Record<string, unknown>): Request {
   return new Request("http://localhost/api/login", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ captchaToken: CAPTCHA_TOKEN, ...body }),
   });
 }
 
 describe("POST /api/login", () => {
   beforeEach(async () => {
+    mockTurnstile(true);
     await resetTestDatabase();
     await getDb()
       .insert(users)
@@ -50,5 +52,15 @@ describe("POST /api/login", () => {
       assert.equal(response.headers.get("set-cookie"), null);
       assert.deepEqual(await response.json(), { error: "Invalid email or password" });
     }
+  });
+
+  test("a failed CAPTCHA gets a 400 with no cookie, even when the password is correct", async () => {
+    mockTurnstile(false);
+
+    const response = await POST(loginRequest({ email: "ana@example.test", password: PASSWORD }));
+
+    assert.equal(response.status, 400);
+    assert.equal(response.headers.get("set-cookie"), null);
+    assert.deepEqual(await response.json(), { error: "CAPTCHA check failed. Please try again." });
   });
 });
