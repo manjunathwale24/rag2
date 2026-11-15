@@ -2,7 +2,7 @@ import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { answerQuestion } from "../src/lib/answer";
 
-process.env.HF_TOKEN = "test-token";
+process.env.NVIDIA_API_KEY = "nvapi-test";
 
 type ChatBody = { model: string; messages: { role: string; content: string }[] };
 const originalFetch = globalThis.fetch;
@@ -63,13 +63,13 @@ test("with NVIDIA_API_KEY set, the chat goes to NVIDIA with its key and model", 
   }
 });
 
-test("without NVIDIA_API_KEY the chat still uses Hugging Face", async () => {
+test("without NVIDIA_API_KEY the answer fails before any request is sent", async () => {
   const saved = process.env.NVIDIA_API_KEY;
   delete process.env.NVIDIA_API_KEY;
-  const bodies = mockChat("from hugging face");
+  const bodies = mockChat("should never be used");
   try {
-    await answerQuestion("Anything?", sources);
-    assert.equal(bodies[0].model, "Qwen/Qwen2.5-7B-Instruct");
+    await assert.rejects(answerQuestion("Anything?", sources), /NVIDIA_API_KEY/);
+    assert.equal(bodies.length, 0);
   } finally {
     restoreEnv("NVIDIA_API_KEY", saved);
   }
