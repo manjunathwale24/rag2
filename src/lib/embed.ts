@@ -1,7 +1,7 @@
 import { EMBEDDING_DIMENSIONS } from "./db/schema";
 
 const BATCH_SIZE = 32;
-const MODEL = "nvidia/llama-3.2-nv-embedqa-1b-v2";
+const MODEL = "nvidia/llama-nemotron-embed-1b-v2";
 const DEFAULT_URL = "https://integrate.api.nvidia.com/v1/embeddings";
 
 // "passage" when indexing documents, "query" when embedding a question. NVIDIA's model needs this to match them well.
