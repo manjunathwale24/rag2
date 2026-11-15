@@ -38,7 +38,11 @@ export function vercelBlobStore(): BlobStore {
       });
     },
     async read(pathname) {
-      const result = await get(pathname, { access: "private", useCache: false });
+      // Look up the blob's URL first. `get(pathname)` would always hit Vercel's host, but `get(url)` honors the API override.
+      const listing = await list({ prefix: pathname, limit: 10 });
+      const blob = listing.blobs.find((entry) => entry.pathname === pathname);
+      if (!blob) throw new Error(`Blob not found: ${pathname}`);
+      const result = await get(blob.url, { access: "private", useCache: false });
       if (!result || result.statusCode !== 200 || !result.stream) {
         throw new Error(`Blob not found: ${pathname}`);
       }

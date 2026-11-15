@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { upload } from "@vercel/blob/client";
 import { SignOutButton } from "../../components/sign-out-button";
-import { buildUploadPathname } from "../../../src/lib/upload-path";
+import { buildUploadPathname, MULTIPART_THRESHOLD_BYTES } from "../../../src/lib/upload-path";
 
 type Document = { id: string; filename: string; status: "pending" | "indexed" | "failed"; error: string | null };
 type Source = { filename: string; headingPath: string; score: number; text: string };
@@ -61,7 +61,7 @@ export default function KnowledgeBasePage() {
         access: "private",
         handleUploadUrl: "/api/blob/upload",
         clientPayload: JSON.stringify({ kbId: id }),
-        multipart: true,
+        multipart: file.size > MULTIPART_THRESHOLD_BYTES,
       });
       // Step 2: tell our database the file exists so it can be indexed.
       const response = await fetch(`/api/kbs/${id}/documents`, {

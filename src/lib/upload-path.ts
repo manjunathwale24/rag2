@@ -1,3 +1,6 @@
+/** Files above this size use the multipart upload protocol. Smaller files use one PUT request. */
+export const MULTIPART_THRESHOLD_BYTES = 5 * 1024 * 1024;
+
 /**
  * Builds a new upload path: `kbs/<kbId>/<uuid>/<filename>`.
  * Slashes are replaced so a filename can never add folders.
