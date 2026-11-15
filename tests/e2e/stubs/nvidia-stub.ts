@@ -2,7 +2,8 @@ import { createServer, type Server } from "node:http";
 import { EMBEDDING_DIMENSIONS } from "../../../src/lib/db/schema";
 import { readBody, sendJson } from "./http";
 
-export const HF_STUB_PORT = 4011;
+export const NVIDIA_STUB_PORT = 4011;
+const RAW_DIMENSIONS = 2048;
 
 /**
  * Turns text into a unit vector by counting hashed words. Texts that share words get similar vectors,
@@ -27,18 +28,24 @@ export function fakeAnswer(userMessage: string): string {
   return source ? `${source[1].trim()} [1]` : "The sources do not contain the answer.";
 }
 
-export function startHfStub(port = HF_STUB_PORT): Promise<Server> {
+export function startNvidiaStub(port = NVIDIA_STUB_PORT): Promise<Server> {
   const server = createServer(async (req, res) => {
     const url = req.url ?? "/";
 
     if (req.method === "GET" && url === "/health") return sendJson(res, 200, { ok: true });
 
-    if (req.method === "POST" && url === "/embed") {
-      const body = JSON.parse((await readBody(req)).toString("utf8")) as { inputs: string[] };
-      return sendJson(res, 200, body.inputs.map(fakeEmbedding));
+    if (req.method === "POST" && url === "/v1/embeddings") {
+      const body = JSON.parse((await readBody(req)).toString("utf8")) as { input: string[] };
+      // The real model returns 2048 numbers per text; the app keeps the first 384.
+      const data = body.input.map((text, index) => ({
+        object: "embedding",
+        index,
+        embedding: [...fakeEmbedding(text), ...new Array<number>(RAW_DIMENSIONS - EMBEDDING_DIMENSIONS).fill(0)],
+      }));
+      return sendJson(res, 200, { object: "list", data });
     }
 
-    if (req.method === "POST" && url === "/chat") {
+    if (req.method === "POST" && url === "/v1/chat/completions") {
       const body = JSON.parse((await readBody(req)).toString("utf8")) as {
         messages: { role: string; content: string }[];
       };
