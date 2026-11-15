@@ -32,8 +32,8 @@ export async function POST(request: Request): Promise<Response> {
           addRandomSuffix: false,
         };
       },
-      // Local webhooks cannot reach this app, so the client registers the document itself after uploading.
-      onUploadCompleted: async () => {},
+      // The client registers the document after uploading (POST /api/kbs/<id>/documents). Blob's completion
+      // callback would need a public URL, which local development doesn't have, so this route doesn't use it.
     });
     return Response.json(json);
   } catch (error) {

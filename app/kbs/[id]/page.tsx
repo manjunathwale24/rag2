@@ -153,7 +153,7 @@ export default function KnowledgeBasePage() {
         </div>
         {answer !== null && (
           <div className="space-y-3">
-            <p className="whitespace-pre-wrap">{answer}</p>
+            <p aria-label="Answer" className="whitespace-pre-wrap">{answer}</p>
             {sources.length > 0 && (
               <details>
                 <summary className="cursor-pointer text-sm text-slate-600">Sources ({sources.length})</summary>
