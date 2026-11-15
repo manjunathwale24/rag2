@@ -21,7 +21,7 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | A2 | Database: Postgres with pgvector on Neon. Local dev uses `pgvector/pgvector:pg17` on port 5433. | Decided |
 | A3 | Raw file storage: Vercel Blob (private access). Object keys are `kbs/{kbId}/...`. | Decided |
 | A4 | Embeddings: Hugging Face hosted `BAAI/bge-small-en-v1.5`, 384 dimensions. Endpoint is set by the `HF_EMBEDDING_URL` env var. | Decided |
-| A5 | Endpoint URL: the default in code is a best guess and is **not verified**. | **Open** |
+| A5 | Endpoint URLs: the defaults in code are the Hugging Face router URLs for `BAAI/bge-small-en-v1.5` feature extraction and `Qwen/Qwen2.5-7B-Instruct` chat. Both routes exist (they return 401 without a token). A real call with a token is still needed to confirm the model and the response shape. | **Open (partly verified)** |
 | A6 | OCR: `tesseract.js` runs on standalone images only. Images embedded in PDFs and DOCX files are not OCR'd in v1. | Decided |
 | A7 | Hierarchical chunking. Parents follow heading sections and never cross a heading. Children are overlapping windows inside a parent. Only children are embedded. Retrieval returns the parent text. | Decided |
 | A8 | Token count is approximated as characters / 4. | Decided |
