@@ -27,6 +27,7 @@ export function isAllowedUploadPath(kbId: string, pathname: string): boolean {
 }
 
 export const ALLOWED_CONTENT_TYPES = [...new Set(Object.values(MIME_TYPES))];
+export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 /** Records an uploaded blob as a pending document. Registering the same path again returns the existing row. */
 export async function registerDocument(input: { kbId: string; pathname: string; store: BlobStore }) {
