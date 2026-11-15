@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "npm run db:migrate && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "node --import tsx --test --test-concurrency=1 tests/*.test.ts",
