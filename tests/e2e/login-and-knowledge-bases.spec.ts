@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { expect, request as playwrightRequest, test } from "@playwright/test";
 import { E2E_PASSWORD, USER_A, USER_B } from "./global-setup";
 
@@ -50,4 +51,17 @@ test("a signed-in user cannot use another user's knowledge base", async ({ brows
 test("an anonymous visitor is sent to the sign-in page", async ({ page }) => {
   await page.goto("/kbs");
   await expect(page).toHaveURL(/\/login$/);
+});
+
+test("a new visitor creates an account and lands on their knowledge bases", async ({ page }) => {
+  const email = `new-${randomUUID()}@example.test`;
+  await page.goto("/login");
+  await page.getByRole("link", { name: "Create an account" }).click();
+  await expect(page).toHaveURL(/\/signup$/);
+
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("a new password");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page).toHaveURL(/\/kbs$/);
+  await expect(page.getByPlaceholder("New knowledge base name")).toBeVisible();
 });
