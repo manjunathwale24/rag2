@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { Turnstile } from "../components/turnstile";
 
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -17,12 +20,18 @@ export default function LoginPage() {
     const response = await fetch("/api/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: String(form.get("email")), password: String(form.get("password")) }),
+      body: JSON.stringify({
+        email: String(form.get("email")),
+        password: String(form.get("password")),
+        captchaToken,
+      }),
     });
     setPending(false);
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
       setError(body?.error ?? "Sign in failed");
+      setCaptchaToken(null);
+      setCaptchaKey((key) => key + 1);
       return;
     }
     router.push("/kbs");
@@ -40,8 +49,9 @@ export default function LoginPage() {
           <span className="text-sm font-medium">Password</span>
           <input name="password" type="password" required autoComplete="current-password" className="mt-1 w-full rounded border px-3 py-2" />
         </label>
+        <Turnstile key={captchaKey} onToken={setCaptchaToken} />
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-        <button type="submit" disabled={pending} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
+        <button type="submit" disabled={pending || !captchaToken} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
           {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>

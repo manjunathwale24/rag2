@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, request as playwrightRequest, test } from "@playwright/test";
 import { E2E_PASSWORD, USER_A, USER_B } from "./global-setup";
+import { E2E_CAPTCHA_TOKEN } from "./stubs/turnstile-stub";
 
 test("signs in, creates a knowledge base, and signs out", async ({ page }) => {
   await page.goto("/login");
@@ -40,7 +41,9 @@ test("a signed-in user cannot use another user's knowledge base", async ({ brows
   await ownerContext.close();
 
   const intruder = await playwrightRequest.newContext({ baseURL });
-  const login = await intruder.post("/api/login", { data: { email: USER_B, password: E2E_PASSWORD } });
+  const login = await intruder.post("/api/login", {
+    data: { email: USER_B, password: E2E_PASSWORD, captchaToken: E2E_CAPTCHA_TOKEN },
+  });
   expect(login.ok()).toBe(true);
 
   const sync = await intruder.post(`/api/kbs/${kbId}/sync`);

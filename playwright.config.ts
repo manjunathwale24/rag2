@@ -1,8 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_TURNSTILE_SECRET } from "./tests/e2e/stubs/turnstile-stub";
 
 const PORT = 3100;
 const BLOB_STUB_URL = "http://localhost:4010";
 const NVIDIA_STUB_URL = "http://localhost:4011";
+const TURNSTILE_STUB_URL = "http://localhost:4012";
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? "postgres://postgres:dev@localhost:5433/rag2_test";
 
@@ -38,6 +40,10 @@ export default defineConfig({
         BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_e2estore_e2esecret",
         VERCEL_BLOB_API_URL: BLOB_STUB_URL,
         NEXT_PUBLIC_VERCEL_BLOB_API_URL: BLOB_STUB_URL,
+        TURNSTILE_SECRET_KEY: E2E_TURNSTILE_SECRET,
+        TURNSTILE_VERIFY_URL: `${TURNSTILE_STUB_URL}/siteverify`,
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: "e2e-site-key",
+        NEXT_PUBLIC_TURNSTILE_SCRIPT_URL: `${TURNSTILE_STUB_URL}/api.js`,
       },
     },
   ],

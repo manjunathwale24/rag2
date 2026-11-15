@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { Turnstile } from "../components/turnstile";
 
 export default function SignupPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -17,12 +20,18 @@ export default function SignupPage() {
     const response = await fetch("/api/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: String(form.get("email")), password: String(form.get("password")) }),
+      body: JSON.stringify({
+        email: String(form.get("email")),
+        password: String(form.get("password")),
+        captchaToken,
+      }),
     });
     setPending(false);
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
       setError(body?.error ?? "Could not create the account");
+      setCaptchaToken(null);
+      setCaptchaKey((key) => key + 1);
       return;
     }
     router.push("/kbs");
@@ -41,8 +50,9 @@ export default function SignupPage() {
           <input name="password" type="password" required minLength={8} autoComplete="new-password" className="mt-1 w-full rounded border px-3 py-2" />
           <span className="mt-1 block text-xs text-slate-500">At least 8 characters.</span>
         </label>
+        <Turnstile key={captchaKey} onToken={setCaptchaToken} />
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-        <button type="submit" disabled={pending} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
+        <button type="submit" disabled={pending || !captchaToken} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
           {pending ? "Creating account…" : "Create account"}
         </button>
       </form>
