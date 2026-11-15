@@ -5,7 +5,7 @@ A small, open-source RAG (retrieval-augmented generation) web app. Sign in, crea
 ## How it works (the short version)
 
 1. **Upload.** The browser sends the file straight to Vercel Blob, a file store, so large files never pass through a serverless function.
-2. **Sync.** The server reads the file, splits it into *chunks* (sections of text), and turns each chunk into an *embedding*: a list of 384 numbers that captures its meaning. Chunks are stored in Postgres with the pgvector extension.
+2. **Sync.** The server reads the file, splits it into *chunks* (sections of text), and turns each chunk into an *embedding*: a list of 512 numbers that captures its meaning. Chunks are stored in Postgres with the pgvector extension.
 3. **Ask.** Your question is turned into an embedding too. The database finds the chunks whose embeddings are closest to it. A chat model writes the answer using only those chunks and cites them.
 
 Chunking is *hierarchical*: each section (a "parent") is split into smaller overlapping pieces (the "children"). Search runs over the small children for precision, and the answer is built from the larger parent so it has enough context.

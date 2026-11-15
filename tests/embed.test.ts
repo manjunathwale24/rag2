@@ -60,7 +60,7 @@ test("passages are embedded by default and queries are marked as queries", async
   await embedTexts(["a question"], "query");
 
   assert.equal(bodies[0].input_type, "passage");
-  assert.equal(bodies[0].model, "nvidia/llama-nemotron-embed-1b-v2");
+  assert.equal(bodies[0].model, "nvidia/nemotron-3-embed-1b");
   assert.equal(bodies[0].truncate, "END");
   assert.equal(bodies[1].input_type, "query");
 });

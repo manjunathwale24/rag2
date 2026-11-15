@@ -36,7 +36,7 @@ export function startNvidiaStub(port = NVIDIA_STUB_PORT): Promise<Server> {
 
     if (req.method === "POST" && url === "/v1/embeddings") {
       const body = JSON.parse((await readBody(req)).toString("utf8")) as { input: string[] };
-      // The real model returns 2048 numbers per text; the app keeps the first 384.
+      // The real model returns 2048 numbers per text; the app keeps the first 512.
       const data = body.input.map((text, index) => ({
         object: "embedding",
         index,

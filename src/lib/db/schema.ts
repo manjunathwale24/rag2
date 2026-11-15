@@ -9,7 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const EMBEDDING_DIMENSIONS = 384;
+export const EMBEDDING_DIMENSIONS = 512;
 
 export const vector = customType<{ data: number[]; driverData: string }>({
   dataType() {

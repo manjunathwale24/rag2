@@ -1,7 +1,7 @@
 import { EMBEDDING_DIMENSIONS } from "./db/schema";
 
 const BATCH_SIZE = 32;
-const MODEL = "nvidia/llama-nemotron-embed-1b-v2";
+const MODEL = "nvidia/nemotron-3-embed-1b";
 const DEFAULT_URL = "https://integrate.api.nvidia.com/v1/embeddings";
 
 // "passage" when indexing documents, "query" when embedding a question. NVIDIA's model needs this to match them well.
@@ -47,8 +47,8 @@ async function embedBatch(inputs: string[], inputType: InputType): Promise<numbe
   }
 }
 
-// The model returns 2048 numbers per text. Keeping the first 384 and rescaling to unit length
-// matches the stored size without a database migration.
+// The model returns 2048 numbers per text. Keeping the first 512 (a size the model supports) and rescaling
+// to unit length matches the stored size.
 function toVectors(response: EmbeddingResponse, expectedCount: number): number[][] {
   const rows = response.data;
   if (!Array.isArray(rows) || rows.length !== expectedCount) {
