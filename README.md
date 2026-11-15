@@ -19,7 +19,7 @@ Chunking is *hierarchical*: each section (a "parent") is split into smaller over
 - Email and password login with a signed JWT cookie, protected by a Cloudflare Turnstile CAPTCHA
 - Tests: `node:test` for unit tests, Playwright for end-to-end (E2E) tests
 
-The design decisions are recorded in [decisions.md](decisions.md).
+The product requirements are in [PRD.md](PRD.md). The design decisions are recorded in [decisions.md](decisions.md).
 
 ## Getting started locally
 
