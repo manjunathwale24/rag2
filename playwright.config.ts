@@ -33,6 +33,7 @@ export default defineConfig({
         DATABASE_URL: TEST_DATABASE_URL,
         AUTH_SECRET: "e2e-only-secret-that-is-at-least-32-characters-long",
         HF_TOKEN: "e2e-token",
+        NVIDIA_API_KEY: "", // empty so E2E always uses the Hugging Face stub, even if .env.local has a key
         HF_EMBEDDING_URL: `${HF_STUB_URL}/embed`,
         HF_CHAT_URL: `${HF_STUB_URL}/chat`,
         BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_e2estore_e2esecret",

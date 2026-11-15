@@ -59,8 +59,9 @@ Schema changes go through migration files only. Edit [src/lib/db/schema.ts](src/
 | `DATABASE_URL` | Postgres connection string |
 | `AUTH_SECRET` | Signs login tokens. At least 32 characters. |
 | `BLOB_READ_WRITE_TOKEN` | Private Vercel Blob store for uploads |
-| `HF_TOKEN` | Hugging Face token for embeddings and chat |
-| `HF_EMBEDDING_URL`, `HF_CHAT_URL`, `HF_CHAT_MODEL` | Optional overrides. The E2E tests point these at local stubs. |
+| `HF_TOKEN` | Hugging Face token for embeddings. Also used for chat unless `NVIDIA_API_KEY` is set. |
+| `NVIDIA_API_KEY` | Optional. NVIDIA key for chat (decision T8). When set, answers use NVIDIA instead of Hugging Face. |
+| `HF_EMBEDDING_URL`, `HF_CHAT_URL`, `HF_CHAT_MODEL`, `NVIDIA_CHAT_URL`, `NVIDIA_CHAT_MODEL` | Optional overrides. The E2E tests point the HF URLs at local stubs. |
 
 ## API
 

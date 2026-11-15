@@ -37,6 +37,49 @@ test("the question and numbered sources go to the model, and its answer comes ba
   assert.match(userMessage, /\[2\][\s\S]*Support is available by email\./);
 });
 
+test("with NVIDIA_API_KEY set, the chat goes to NVIDIA with its key and model", async () => {
+  const saved = { key: process.env.NVIDIA_API_KEY, model: process.env.NVIDIA_CHAT_MODEL };
+  process.env.NVIDIA_API_KEY = "nvapi-test";
+  delete process.env.NVIDIA_CHAT_MODEL;
+  const calls: { url: string; auth: string | null; model: string }[] = [];
+  globalThis.fetch = (async (url: unknown, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body)) as ChatBody;
+    calls.push({
+      url: String(url),
+      auth: new Headers(init?.headers).get("authorization"),
+      model: body.model,
+    });
+    return Response.json({ choices: [{ message: { content: "Yes [1]." } }] });
+  }) as typeof fetch;
+  try {
+    const answer = await answerQuestion("Anything?", sources);
+    assert.equal(answer, "Yes [1].");
+    assert.equal(calls[0].url, "https://integrate.api.nvidia.com/v1/chat/completions");
+    assert.equal(calls[0].auth, "Bearer nvapi-test");
+    assert.equal(calls[0].model, "meta/llama-3.2-90b-vision-instruct");
+  } finally {
+    restoreEnv("NVIDIA_API_KEY", saved.key);
+    restoreEnv("NVIDIA_CHAT_MODEL", saved.model);
+  }
+});
+
+test("without NVIDIA_API_KEY the chat still uses Hugging Face", async () => {
+  const saved = process.env.NVIDIA_API_KEY;
+  delete process.env.NVIDIA_API_KEY;
+  const bodies = mockChat("from hugging face");
+  try {
+    await answerQuestion("Anything?", sources);
+    assert.equal(bodies[0].model, "Qwen/Qwen2.5-7B-Instruct");
+  } finally {
+    restoreEnv("NVIDIA_API_KEY", saved);
+  }
+});
+
+function restoreEnv(name: string, value: string | undefined) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
+
 test("when nothing was retrieved it says so and does not call the model", async () => {
   const bodies = mockChat("should never be used");
 

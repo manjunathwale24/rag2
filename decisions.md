@@ -58,7 +58,8 @@ Architecture and product decisions for the RAG app. Status is one of: **Decided*
 | T4 | `next.config.ts` had `cacheComponents` and `partialPrefetching` from the scaffold. Removed. Every page is per-user and reads at request time, so prerendering with these flags only broke the build (`useParams` needs runtime data). | **Decided** |
 | T5 | Git identity for commits: the `Copilot` identity is passed per command, so global config is unchanged. | Decided |
 | T6 | E2E tests use local stubs for Vercel Blob (port 4010) and Hugging Face (port 4011), in `tests/e2e/stubs/`. The user has no real credentials yet. The stubs prove the app's code paths, not the real services. | Decided (user confirmed) |
-| T7 | Vercel build runs `npm run db:migrate` before `next build` (script `vercel-build`, set in `vercel.json`). A failing migration stops the deploy, so new code never runs against an unmigrated database. Migrations are reviewed in git before merge. | Decided (user chose this) |
+| T8 | Chat provider: if `NVIDIA_API_KEY` is set, answers use NVIDIA's OpenAI-compatible endpoint (`meta/llama-3.2-90b-vision-instruct` by default, override with `NVIDIA_CHAT_MODEL`). Otherwise the app uses Hugging Face chat. Embeddings stay on Hugging Face. The user chose NVIDIA for chat. The key was pasted in chat before this change, so it was rotated first. | Decided (user chose this) |
+ `npm run db:migrate` before `next build` (script `vercel-build`, set in `vercel.json`). A failing migration stops the deploy, so new code never runs against an unmigrated database. Migrations are reviewed in git before merge. | Decided (user chose this) |
 
 ## Open questions
 
