@@ -93,7 +93,7 @@ The app is not deployed yet. The plan:
 1. Create a Neon Postgres database and enable the `vector` extension.
 2. Create a private Vercel Blob store.
 3. Set the environment variables above in Vercel, with `DATABASE_URL` pointing at Neon and a real `AUTH_SECRET`.
-4. Run `npm run db:migrate` against the Neon `DATABASE_URL`. Whether the Vercel build runs migrations automatically is still an open decision.
+4. Set the Vercel build command to use `vercel.json` (already set). Each build runs `npm run db:migrate` against `DATABASE_URL` before `next build`. If a migration fails, the deploy fails.
 5. Create users with `npm run user:create` against the production database.
 
 5. Create users with `npm run user:create` against the production database.
