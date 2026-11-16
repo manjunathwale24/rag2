@@ -4,7 +4,7 @@ import { answerQuestion } from "../src/lib/answer";
 
 process.env.NVIDIA_API_KEY = "nvapi-test";
 
-type ChatBody = { model: string; messages: { role: string; content: string }[] };
+type ChatBody = { model: string; temperature?: number; messages: { role: string; content: string }[] };
 const originalFetch = globalThis.fetch;
 
 function mockChat(reply: string): ChatBody[] {
@@ -31,6 +31,7 @@ test("the question and numbered sources go to the model, and its answer comes ba
   const answer = await answerQuestion("How do I install?", sources);
 
   assert.equal(answer, "Run the installer [1].");
+  assert.equal(bodies[0].temperature, 0);
   const userMessage = bodies[0].messages.at(-1)?.content ?? "";
   assert.match(userMessage, /How do I install\?/);
   assert.match(userMessage, /\[1\][\s\S]*Run the installer to set up the app\./);

@@ -53,6 +53,7 @@ export async function answerQuestion(question: string, sources: Source[]): Promi
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `Sources:\n\n${context}\n\nQuestion: ${question}` },
       ],
+      temperature: 0,
       max_tokens: 500,
     }),
   });
