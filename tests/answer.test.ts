@@ -56,7 +56,7 @@ test("with NVIDIA_API_KEY set, the chat goes to NVIDIA with its key and model", 
     assert.equal(answer, "Yes [1].");
     assert.equal(calls[0].url, "https://integrate.api.nvidia.com/v1/chat/completions");
     assert.equal(calls[0].auth, "Bearer nvapi-test");
-    assert.equal(calls[0].model, "meta/llama-3.2-90b-vision-instruct");
+    assert.equal(calls[0].model, "google/gemma-4-31b-it");
   } finally {
     restoreEnv("NVIDIA_API_KEY", saved.key);
     restoreEnv("NVIDIA_CHAT_MODEL", saved.model);

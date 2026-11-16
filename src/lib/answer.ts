@@ -3,7 +3,7 @@ import type { RetrievedParent } from "./retrieve";
 type Source = Pick<RetrievedParent, "filename" | "headingPath" | "text">;
 
 const NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const NVIDIA_MODEL = "meta/llama-3.2-90b-vision-instruct";
+const NVIDIA_MODEL = "google/gemma-4-31b-it";
 const NOT_FOUND = "I couldn't find anything in this knowledge base that answers that question.";
 const SYSTEM_PROMPT =
   "Answer the question using only the numbered sources. Cite the sources you use, like [1]. " +
