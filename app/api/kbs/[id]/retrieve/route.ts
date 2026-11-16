@@ -1,5 +1,5 @@
 import { getUserFromRequest } from "../../../../../src/lib/auth";
-import { answerQuestion } from "../../../../../src/lib/answer";
+import { answerQuestion, selectContext } from "../../../../../src/lib/answer";
 import { retrieve } from "../../../../../src/lib/retrieve";
 import { findOwnedKbId } from "../../../../../src/lib/kbs";
 
@@ -21,10 +21,11 @@ export async function POST(
   if (!question) return Response.json({ error: "question is required" }, { status: 400 });
 
   const sources = await retrieve(kbId, question, TOP_K);
-  const answer = await answerQuestion(question, sources);
+  const context = selectContext(sources);
+  const answer = await answerQuestion(question, context);
   return Response.json({
     answer,
-    sources: sources.map((source) => ({
+    sources: context.map((source) => ({
       filename: source.filename,
       headingPath: source.headingPath,
       score: source.score,
