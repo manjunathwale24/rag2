@@ -88,3 +88,23 @@ test("when nothing was retrieved it says so and does not call the model", async 
   assert.match(answer, /couldn't find/i);
   assert.equal(bodies.length, 0);
 });
+
+test("only the best few sources go to the model, each trimmed around its matching passage", async () => {
+  const bodies = mockChat("ok");
+  const filler = "x".repeat(3000);
+  const many = [
+    { filename: "a.md", headingPath: "A", score: 0.5, matchedText: "NEEDLE", text: `${filler}NEEDLE${filler}` },
+    { filename: "b.md", headingPath: "B", score: 0.48, text: "second" },
+    { filename: "c.md", headingPath: "C", score: 0.45, text: "third" },
+    { filename: "d.md", headingPath: "D", score: 0.44, text: "fourth" },
+    { filename: "e.md", headingPath: "E", score: 0.1, text: "weak" },
+  ];
+
+  await answerQuestion("Where?", many);
+
+  const userMessage = bodies[0].messages.at(-1)?.content ?? "";
+  assert.match(userMessage, /NEEDLE/);
+  assert.match(userMessage, /\[3\] c\.md/);
+  assert.doesNotMatch(userMessage, /\[4\]/);
+  assert.ok(userMessage.length < 2500, `prompt too long: ${userMessage.length}`);
+});
